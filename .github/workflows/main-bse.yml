@@ -30,7 +30,14 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
+      - name: Install Docker on macOS
+        if: matrix.platform == 'macos-latest'
+        run: |
+          brew install docker docker-compose
+          brew services start docker
+          sleep 10  # Give Docker time to start
+
       - name: Build Docker image
         run: docker build -t bse:dev .
 
@@ -56,6 +63,13 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install Docker on macOS
+        if: matrix.platform == 'macos-latest'
+        run: |
+          brew install docker docker-compose
+          brew services start docker
+          sleep 10  # Give Docker time to start
 
       - name: Build Docker image
         run: docker build -t bse:dev .
