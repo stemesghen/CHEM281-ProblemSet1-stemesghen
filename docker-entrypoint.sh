@@ -2,22 +2,21 @@
 
 BASE_URL="https://www.basissetexchange.org"
 
-#input arguments
+# Accept input arguments from Docker command
 basis="$1"
 format="$2"
 elements="$3"
 
-#url Bse api
-
+# Construct the BSE API URL
 download_url="${BASE_URL}/api/basis/${basis}/format/${format}/?elements=${elements}"
 
-# output directory in container
+# Create output directory
 mkdir -p /output
 
-# Download and save the file
+# Download the file directly without error checking
 curl -s "$download_url" -o "/output/${basis}.${format}"
 
-# Print output completed
+# Print a confirmation message
 echo "Downloaded ${basis}.${format} to /output/"
 
 
