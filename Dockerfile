@@ -11,14 +11,13 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Set working directory for inputs
+# Set working directory
 WORKDIR /output
 
-# Copy and configure entrypoint script
+# Copy the entrypoint script
 COPY docker-entrypoint.sh /bin/docker-entrypoint.sh
 RUN chmod +x /bin/docker-entrypoint.sh
 
-# Set default command to the entrypoint script
+# Set default command
 ENTRYPOINT ["/bin/docker-entrypoint.sh"]
-
 
