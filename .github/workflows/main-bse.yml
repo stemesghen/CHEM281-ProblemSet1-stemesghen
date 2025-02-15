@@ -37,17 +37,15 @@ jobs:
       - name: Build Docker Image
         run: docker build -t bse:dev .
 
-      - name: Run Docker container & insert output
+      - name: Run Docker container & write to README.md
         run: |
-          docker run --rm -v "$(pwd)/output:/output" bse:dev \
+          docker run --rm bse:dev \
             ${{ matrix.basis }} \
             ${{ matrix.format }} \
             ${{ matrix.elements }}
 
-      - name: Display Downloaded Files
-        run: |
-          ls -l output/ 
-          cat output/*.${{ matrix.format }} 
+      - name: Display README.md
+        run: cat README.md
 
   manual_dispatch_job:
     if: github.event_name == 'workflow_dispatch'
@@ -62,16 +60,14 @@ jobs:
 
       - name: Run Docker container with manual inputs
         run: |
-          mkdir -p output
-          docker run --rm -v "$(pwd)/output:/output" bse:dev \
+          docker run --rm bse:dev \
             "${{ github.event.inputs.basis }}" \
             "${{ github.event.inputs.format }}" \
             "${{ github.event.inputs.elements }}"
 
-      - name: Show Downloaded File
-        run: |
-          ls -l output/ 
-          cat output/*.${{ github.event.inputs.format }} 
+      - name: Show README.md
+        run: cat README.md
+
 
 
 
