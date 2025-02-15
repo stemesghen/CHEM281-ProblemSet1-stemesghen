@@ -39,7 +39,6 @@ jobs:
 
       - name: Run Docker container & insert output
         run: |
-          mkdir -p output
           docker run --rm -v "$(pwd)/output:/output" bse:dev \
             ${{ matrix.basis }} \
             ${{ matrix.format }} \
@@ -47,8 +46,8 @@ jobs:
 
       - name: Display Downloaded Files
         run: |
-          ls -l output/ || echo "No files found"
-          cat output/*.${{ matrix.format }} || echo "No valid files to display"
+          ls -l output/ 
+          cat output/*.${{ matrix.format }} 
 
   manual_dispatch_job:
     if: github.event_name == 'workflow_dispatch'
@@ -71,8 +70,8 @@ jobs:
 
       - name: Show Downloaded File
         run: |
-          ls -l output/ || echo "No files found"
-          cat output/*.${{ github.event.inputs.format }} || echo "No valid files to display"
+          ls -l output/ 
+          cat output/*.${{ github.event.inputs.format }} 
 
 
 
