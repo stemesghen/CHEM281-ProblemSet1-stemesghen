@@ -15,7 +15,6 @@ curl -s "$download_url" > "/README.md"
 
 echo "Downloaded ${basis}.${format} and saved to README.md"
 
-# Print a confirmation message
-echo "Downloaded ${basis}.${format} to /output/"
+
 
 
