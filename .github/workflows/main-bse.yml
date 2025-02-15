@@ -31,16 +31,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Docker on macOS
+      - name: Install Docker and Buildx on macOS
         if: matrix.platform == 'macos-latest'
         run: |
           brew install --formula docker docker-compose
           mkdir -p ~/.docker && echo '{"cliPluginsExtraDirs":["/opt/homebrew/lib/docker/cli-plugins"]}' > ~/.docker/config.json
+          brew install docker-buildx
+          export DOCKER_CLI_EXPERIMENTAL=enabled
           brew services start docker || echo "Docker service not supported"
           sleep 10
 
-      - name: Build Docker image
-        run: docker build -t bse:dev .
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Docker image with Buildx
+        run: docker buildx build --platform linux/amd64 -t bse:dev .
 
       - name: Run Docker container to download BSE files
         run: |
@@ -65,16 +70,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Docker on macOS
+      - name: Install Docker and Buildx on macOS
         if: matrix.platform == 'macos-latest'
         run: |
           brew install --formula docker docker-compose
           mkdir -p ~/.docker && echo '{"cliPluginsExtraDirs":["/opt/homebrew/lib/docker/cli-plugins"]}' > ~/.docker/config.json
+          brew install docker-buildx
+          export DOCKER_CLI_EXPERIMENTAL=enabled
           brew services start docker || echo "Docker service not supported"
           sleep 10
 
-      - name: Build Docker image
-        run: docker build -t bse:dev .
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Docker image with Buildx
+        run: docker buildx build --platform linux/amd64 -t bse:dev .
 
       - name: Run Docker container with manual inputs
         run: |
