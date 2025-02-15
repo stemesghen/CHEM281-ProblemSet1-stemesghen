@@ -70,6 +70,5 @@ jobs:
 
       - name: Show Downloaded File
         run: |
-          mkdir -p output
-          ls -l output/ 
-          cat output/*.${{ github.event.inputs.format }} 
+          ls -l 
+          cat *.${{ github.event.inputs.format }}
