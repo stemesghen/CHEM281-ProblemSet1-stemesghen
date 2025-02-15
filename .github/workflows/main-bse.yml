@@ -20,6 +20,7 @@ on:
 jobs:
   matrix_jobs:
     strategy:
+      fail-fast: false
       matrix:
         platform: [ubuntu-latest, macos-latest, windows-latest]
         basis: [sto-3g, 6-31g]
@@ -30,16 +31,16 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      
+      - name: Echo Platform Info
+        run: echo "Running on ${{ matrix.platform }}"
 
-      - name: Fix Docker Daemon on macOS
+      - name: Install Docker on macOS
         if: matrix.platform == 'macos-latest'
         run: |
-          brew install --formula docker docker-buildx
-          sudo mkdir -p /etc/docker
-          echo '{"experimental": true}' | sudo tee /etc/docker/daemon.json
-          sudo brew services start docker || echo "Docker service start failed"
+          brew install --cask docker
+          sudo launchctl load /Library/LaunchDaemons/com.docker.docker.plist || echo "Docker daemon start failed"
           sleep 20
-          docker info || echo "Docker daemon not ready"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -71,16 +72,13 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Fix Docker Daemon on macOS
+      
+      - name: Install Docker on macOS
         if: matrix.platform == 'macos-latest'
         run: |
-          brew install --formula docker docker-buildx
-          sudo mkdir -p /etc/docker
-          echo '{"experimental": true}' | sudo tee /etc/docker/daemon.json
-          sudo brew services start docker || echo "Docker service start failed"
+          brew install --cask docker
+          sudo launchctl load /Library/LaunchDaemons/com.docker.docker.plist || echo "Docker daemon start failed"
           sleep 20
-          docker info || echo "Docker daemon not ready"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -101,3 +99,4 @@ jobs:
         run: |
           ls -l output/
           cat output/*.${{ github.event.inputs.format }}
+
