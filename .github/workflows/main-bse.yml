@@ -27,76 +27,47 @@ jobs:
         format: [json, nwchem]
         elements: [H-Ne, C,8,p-17]
     runs-on: ${{ matrix.platform }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
-      - name: Echo Platform Info
-        run: echo "Running on ${{ matrix.platform }}"
-
-      - name: Install Docker on macOS
-        if: matrix.platform == 'macos-latest'
-        run: |
-          brew install --cask docker
-          sudo launchctl load /Library/LaunchDaemons/com.docker.docker.plist || echo "Docker daemon start failed"
-          sleep 20
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-        with:
-          driver-opts: network=host
-
-      - name: Build Docker image with Buildx
-        run: docker buildx build --platform linux/amd64 --progress plain --load -t bse:dev .
-
+      - name: Build Docker image
+        run: docker build -t bse:dev .
       - name: Run Docker container to download BSE files
         run: |
           docker run --rm -v "$(pwd):/output" bse:dev \
             ${{ matrix.basis }} \
             ${{ matrix.format }} \
             ${{ matrix.elements }}
-
       - name: Display downloaded files from host
         run: |
           ls -l output/
           cat output/*.${{ matrix.format }}
 
-  manual_dispatch_job:
-    strategy:
-      matrix:
-        platform: [ubuntu-latest, macos-latest, windows-latest]
-    runs-on: ${{ matrix.platform }}
-    if: github.event_name == 'workflow_dispatch'
-
+  ubuntu_docker_job:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      
+      - name: Use Docker on Ubuntu
+        run: |
+          docker pull ubuntu:22.04
+          docker run --rm ubuntu:22.04 echo "hello from container"
+
+  windows_docker_job:
+    runs-on: windows-latest
+    steps:
+      - name: Use Docker on Windows
+        run: |
+          docker pull mcr.microsoft.com/windows/servercore:ltsc2022
+          docker run --rm mcr.microsoft.com/windows/servercore:ltsc2022 powershell -Command "Write-Output 'hello from a windows container'"
+
+  macos_docker_job:
+    runs-on: macos-latest
+    steps:
       - name: Install Docker on macOS
-        if: matrix.platform == 'macos-latest'
         run: |
-          brew install --cask docker
-          sudo launchctl load /Library/LaunchDaemons/com.docker.docker.plist || echo "Docker daemon start failed"
-          sleep 20
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-        with:
-          driver-opts: network=host
-
-      - name: Build Docker image with Buildx
-        run: docker buildx build --platform linux/amd64 --progress plain --load -t bse:dev .
-
-      - name: Run Docker container with manual inputs
+          brew install docker
+          colima start
+      - name: Use Docker on macOS
         run: |
-          docker run --rm -v "$(pwd):/output" bse:dev \
-            "${{ github.event.inputs.basis }}" \
-            "${{ github.event.inputs.format }}" \
-            "${{ github.event.inputs.elements }}"
-
-      - name: Display downloaded files from host (manual input)
-        run: |
-          ls -l output/
-          cat output/*.${{ github.event.inputs.format }}
+          docker pull ubuntu:22.04
+          docker run --rm ubuntu:22.04 echo "hello from container"
 
