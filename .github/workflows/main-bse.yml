@@ -22,74 +22,57 @@ on:
 
 jobs:
   matrix_jobs:
-    runs-on: ${{ matrix.platform }}
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        platform: [ubuntu-latest, macos-latest, windows-latest]
         basis: [sto-3g, 6-31g]
         format: [json, nwchem]
-        elements: [H-Ne, C, N, O]
+        elements: [H-Ne, C, 8, p-17]
+
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Build Docker image
+      - name: Build Docker Image
         run: docker build -t bse:dev .
 
-      - name: Run Docker container to download BSE files
-        shell: bash
+      - name: Run Docker container & insert output
         run: |
           mkdir -p output
-          if [[ "$RUNNER_OS" == "Windows" ]]; then
-            docker run --rm -v "${{ github.workspace }}/output:/output" bse:dev \
-              ${{ matrix.basis }} \
-              ${{ matrix.format }} \
-              ${{ matrix.elements }}
-          else
-            docker run --rm -v "$(pwd)/output:/output" bse:dev \
-              ${{ matrix.basis }} \
-              ${{ matrix.format }} \
-              ${{ matrix.elements }}
-          fi
+          docker run --rm -v "$(pwd)/output:/output" bse:dev \
+            ${{ matrix.basis }} \
+            ${{ matrix.format }} \
+            ${{ matrix.elements }}
 
-      - name: Display downloaded files from host
+      - name: Display Downloaded Files
         run: |
           ls -l output/ || echo "No files found"
           cat output/*.${{ matrix.format }} || echo "No valid files to display"
 
-  ubuntu_docker_job:
+  manual_dispatch_job:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+
     steps:
-      - name: Use Docker on Ubuntu
-        run: |
-          docker pull ubuntu:22.04
-          docker run --rm ubuntu:22.04 echo "hello from container"
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-  windows_docker_job:
-    runs-on: windows-latest
-    steps:
-      - name: Use Docker on Windows
-        run: |
-          docker pull mcr.microsoft.com/windows/servercore:ltsc2022
-          docker run --rm mcr.microsoft.com/windows/servercore:ltsc2022 powershell -Command "Write-Output 'hello from a windows container'"
+      - name: Build Docker Image
+        run: docker build -t bse:dev .
 
-  macos_docker_job:
-    runs-on: macos-latest
-    steps:
-      - name: Install Docker on macOS
+      - name: Run Docker container with manual inputs
         run: |
-          brew install docker docker-compose
-          colima start || true
+          mkdir -p output
+          docker run --rm -v "$(pwd)/output:/output" bse:dev \
+            "${{ github.event.inputs.basis }}" \
+            "${{ github.event.inputs.format }}" \
+            "${{ github.event.inputs.elements }}"
 
-      - name: Start Docker Daemon
+      - name: Show Downloaded File
         run: |
-          sudo dockerd > /dev/null 2>&1 &
-          sleep 5
+          ls -l output/ || echo "No files found"
+          cat output/*.${{ github.event.inputs.format }} || echo "No valid files to display"
 
-      - name: Use Docker on macOS
-        run: |
-          docker pull ubuntu:22.04
-          docker run --rm ubuntu:22.04 echo "hello from container"
 
 
