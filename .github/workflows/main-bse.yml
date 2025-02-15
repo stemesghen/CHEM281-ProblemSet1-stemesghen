@@ -31,21 +31,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Docker and Buildx on macOS
+      - name: Install Docker and Start Daemon on macOS
         if: matrix.platform == 'macos-latest'
         run: |
-          brew install --formula docker docker-compose
+          brew install --formula docker docker-compose docker-buildx
           mkdir -p ~/.docker && echo '{"cliPluginsExtraDirs":["/opt/homebrew/lib/docker/cli-plugins"]}' > ~/.docker/config.json
-          brew install docker-buildx
-          export DOCKER_CLI_EXPERIMENTAL=enabled
-          brew services start docker || echo "Docker service not supported"
-          sleep 10
+          sudo launchctl load /Library/LaunchDaemons/com.docker.docker.plist || echo "Docker daemon start failed"
+          sleep 15
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
+        with:
+          driver-opts: network=host
 
       - name: Build Docker image with Buildx
-        run: docker buildx build --platform linux/amd64 -t bse:dev .
+        run: docker buildx build --platform linux/amd64 --progress plain -t bse:dev .
 
       - name: Run Docker container to download BSE files
         run: |
@@ -70,21 +70,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Docker and Buildx on macOS
+      - name: Install Docker and Start Daemon on macOS
         if: matrix.platform == 'macos-latest'
         run: |
-          brew install --formula docker docker-compose
+          brew install --formula docker docker-compose docker-buildx
           mkdir -p ~/.docker && echo '{"cliPluginsExtraDirs":["/opt/homebrew/lib/docker/cli-plugins"]}' > ~/.docker/config.json
-          brew install docker-buildx
-          export DOCKER_CLI_EXPERIMENTAL=enabled
-          brew services start docker || echo "Docker service not supported"
-          sleep 10
+          sudo launchctl load /Library/LaunchDaemons/com.docker.docker.plist || echo "Docker daemon start failed"
+          sleep 15
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
+        with:
+          driver-opts: network=host
 
       - name: Build Docker image with Buildx
-        run: docker buildx build --platform linux/amd64 -t bse:dev .
+        run: docker buildx build --platform linux/amd64 --progress plain -t bse:dev .
 
       - name: Run Docker container with manual inputs
         run: |
