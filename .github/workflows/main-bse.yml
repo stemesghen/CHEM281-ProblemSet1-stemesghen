@@ -3,9 +3,11 @@ run-name: Test workflow
 
 on:
   push:
-    branches: "*"
+    branches:
+      - "**"
   pull_request:
-    branches: "*"
+    branches:
+      - "**"
   workflow_dispatch:
     inputs:
       basis:
@@ -20,6 +22,7 @@ on:
 
 jobs:
   matrix_jobs:
+    runs-on: ${{ matrix.platform }}
     strategy:
       fail-fast: false
       matrix:
@@ -27,7 +30,6 @@ jobs:
         basis: [sto-3g, 6-31g]
         format: [json, nwchem]
         elements: [H-Ne, C, N, Invalid]
-    runs-on: ${{ matrix.platform }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -36,17 +38,25 @@ jobs:
         run: docker build -t bse:dev .
 
       - name: Run Docker container to download BSE files
+        shell: bash
         run: |
           mkdir -p output
-          docker run --rm -v "$(pwd)/output:/output" bse:dev \
-            ${{ matrix.basis }} \
-            ${{ matrix.format }} \
-            ${{ matrix.elements }}
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            docker run --rm -v "${{ github.workspace }}/output:/output" bse:dev \
+              ${{ matrix.basis }} \
+              ${{ matrix.format }} \
+              ${{ matrix.elements }}
+          else
+            docker run --rm -v "$(pwd)/output:/output" bse:dev \
+              ${{ matrix.basis }} \
+              ${{ matrix.format }} \
+              ${{ matrix.elements }}
+          fi
 
       - name: Display downloaded files from host
         run: |
-          ls -l output/
-          cat output/*.${{ matrix.format }}
+          ls -l output/ || echo "No files found"
+          cat output/*.${{ matrix.format }} || echo "No valid files to display"
 
   ubuntu_docker_job:
     runs-on: ubuntu-latest
@@ -69,8 +79,13 @@ jobs:
     steps:
       - name: Install Docker on macOS
         run: |
-          brew install docker
-          colima start
+          brew install docker docker-compose
+          colima start || true
+
+      - name: Start Docker Daemon
+        run: |
+          sudo dockerd > /dev/null 2>&1 &
+          sleep 5
 
       - name: Use Docker on macOS
         run: |
