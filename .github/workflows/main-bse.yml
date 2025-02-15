@@ -1,4 +1,4 @@
-name: BSE Problem Set 1
+BSE Problem Set 1
 run-name: Test workflow
 
 on:
@@ -37,15 +37,17 @@ jobs:
       - name: Build Docker Image
         run: docker build -t bse:dev .
 
-      - name: Run Docker container & write to README.md
+      - name: Run Docker container & insert output
         run: |
-          docker run --rm bse:dev \
+          docker run --rm -v "$(pwd)/output:/output" bse:dev \
             ${{ matrix.basis }} \
             ${{ matrix.format }} \
             ${{ matrix.elements }}
 
-      - name: Display README.md
-        run: cat README.md
+      - name: Display Downloaded Files
+        run: |
+          ls -l output/ 
+          cat output/*.${{ matrix.format }} 
 
   manual_dispatch_job:
     if: github.event_name == 'workflow_dispatch'
@@ -60,14 +62,13 @@ jobs:
 
       - name: Run Docker container with manual inputs
         run: |
-          docker run --rm bse:dev \
+          mkdir -p output
+          docker run --rm -v "$(pwd)/output:/output" bse:dev \
             "${{ github.event.inputs.basis }}" \
             "${{ github.event.inputs.format }}" \
             "${{ github.event.inputs.elements }}"
 
-      - name: Show README.md
-        run: cat README.md
-
-
-
-
+      - name: Show Downloaded File
+        run: |
+          ls -l output/ 
+          cat output/*.${{ github.event.inputs.format }} 
