@@ -39,7 +39,7 @@ jobs:
 
       - name: Run Docker container & insert output
         run: |
-          docker run --rm -v "$(pwd)/output:/output" bse:dev \
+          docker run --rm bse:dev \
             ${{ matrix.basis }} \
             ${{ matrix.format }} \
             ${{ matrix.elements }}
