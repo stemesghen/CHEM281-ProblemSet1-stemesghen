@@ -1,4 +1,4 @@
-BSE Problem Set 1
+name: BSE Problem Set 1
 run-name: Test workflow
 
 on:
@@ -28,7 +28,7 @@ jobs:
       matrix:
         basis: [sto-3g, 6-31g]
         format: [json, nwchem]
-        elements: [H-Ne, C, 8, p-17]
+        elements: [H-Ne, C, N, O]
 
     steps:
       - name: Checkout Repository
@@ -37,17 +37,17 @@ jobs:
       - name: Build Docker Image
         run: docker build -t bse:dev .
 
-      - name: Run Docker container & insert output
+      - name: Run Docker container & download files
         run: |
-          docker run --rm bse:dev \
+          docker run --rm -v "$(pwd):/output" bse:dev \
             ${{ matrix.basis }} \
             ${{ matrix.format }} \
             ${{ matrix.elements }}
 
       - name: Display Downloaded Files
         run: |
-          ls -l output/ 
-          cat output/*.${{ matrix.format }} 
+          ls -l
+          cat *.${{ matrix.format }} 
 
   manual_dispatch_job:
     if: github.event_name == 'workflow_dispatch'
@@ -62,13 +62,12 @@ jobs:
 
       - name: Run Docker container with manual inputs
         run: |
-          mkdir -p output
-          docker run --rm -v "$(pwd)/output:/output" bse:dev \
+          docker run --rm -v "$(pwd):/output" bse:dev \
             "${{ github.event.inputs.basis }}" \
             "${{ github.event.inputs.format }}" \
             "${{ github.event.inputs.elements }}"
 
       - name: Show Downloaded File
         run: |
-          ls -l 
-          cat *.${{ github.event.inputs.format }}
+          ls -l
+          cat *.${{ github.event.inputs.format }} 
